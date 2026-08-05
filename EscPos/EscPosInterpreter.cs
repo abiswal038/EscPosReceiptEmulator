@@ -195,7 +195,7 @@ public class EscPosInterpreter
 
                         Logger.Info($"Execute [{_activeCommand.GetType().Name}]");
 
-                        _activeCommand.Execute(_printer, null);
+                        _activeCommand.Execute(_printer, (string?)null);
                         _activeCommand = null;
                     }
                 }
