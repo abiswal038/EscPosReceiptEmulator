@@ -67,6 +67,7 @@ public class EscPosInterpreter
         // FS = 0x1C
         RegisterCommand(new PrintStoredLogo()); // 0x1C, 0x70, n, m
         RegisterCommand(new PaperAutoCut()); // 0x1C, 0x7D, 0x60, n
+        RegisterCommand(new SelectPrintPositionCommand()); // 0x1C, 0x2E
         
         // GS = 0x1D
         RegisterCommand(new SelectCharacterSizeCommand());
