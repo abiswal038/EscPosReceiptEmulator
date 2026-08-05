@@ -57,6 +57,7 @@ public class EscPosInterpreter
         RegisterCommand(new SetLineSpacingCommand());
         RegisterCommand(new ToggleEmphasizeCommand());
         RegisterCommand(new ToggleUnderlineCommand());
+        RegisterCommand(new SelectPrintDirectionCommand()); // 0x1B, 0x56
         RegisterCommand(new SetPrintTextMode()); // 0x1B, 0x21, n
         RegisterCommand(new PaperFullCut()); // 0x1B, 0x6D
         RegisterCommand(new PaperPartialCut()); // 0x1B, 0x69
