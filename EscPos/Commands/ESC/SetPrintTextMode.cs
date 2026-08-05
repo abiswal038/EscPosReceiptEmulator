@@ -27,6 +27,12 @@ public class SetPrintTextMode : BaseCommand
         return false;
     }
 
+    public override bool InterpretNextByte(byte b)
+    {
+        _n = b;
+        return false;
+    }
+
     public override void Execute(ReceiptPrinter printer, string? args)
     {
         if ((_n & 1) > 0) printer.SelectFont(PrinterFont.FontB);
@@ -46,5 +52,13 @@ public class SetPrintTextMode : BaseCommand
         
         if ((_n & 128) > 0) printer.SelectUnderlineMode(UnderlineMode.OnOneDot);
         else printer.SelectUnderlineMode(UnderlineMode.Off);
+    }
+
+    public override void Execute(ReceiptPrinter printer, byte[]? args)
+    {
+        if (args != null && args.Length > 0)
+            _n = args[0];
+
+        Execute(printer, (string?)null);
     }
 }

@@ -48,6 +48,32 @@ public class PaperEjectCommand : BaseCommand
         return false;
     }
 
+    public override bool InterpretNextByte(byte b)
+    {
+        if (_idx == 0)
+        {
+            _idx++;
+            _n = b;
+            _m = 0;
+            _t = 0;
+            if (_n == 3 || _n == 8 || _n == 32) return true;
+        }
+        else if (_idx == 1)
+        {
+            _idx++;
+            _m = b;
+            _t = 0;
+            if (_n == 32) return true;
+        }
+        else if (_idx == 2)
+        {
+            _idx++;
+            _t = b;
+        }
+        
+        return false;
+    }
+
     public override void Execute(ReceiptPrinter printer, string? args)
     {
         // Nothing to do

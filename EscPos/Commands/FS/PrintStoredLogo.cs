@@ -41,9 +41,27 @@ public class PrintStoredLogo : BaseCommand
         return false;
     }
 
+    public override bool InterpretNextByte(byte b)
+    {
+        if (_idx == 0)
+        {
+            _idx++;
+            _n = b;
+            _m = 0;
+            return true;
+        }
+        else if (_idx == 1)
+        {
+            _idx++;
+            _m = b;
+        }
+        
+        return false;
+    }
+
     public override void Execute(ReceiptPrinter printer, string? args)
     {
-    		// Normally we can't do anyting
-    		// We can probably add a simulated logo in the future
+        // Normally we can't do anything
+        // We can probably add a simulated logo in the future
     }
 }

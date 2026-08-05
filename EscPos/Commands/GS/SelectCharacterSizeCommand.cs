@@ -24,6 +24,12 @@ public class SelectCharacterSizeCommand : BaseCommand
         return false;
     }
 
+    public override bool InterpretNextByte(byte b)
+    {
+        _n = b;
+        return false;
+    }
+
     public override void Execute(ReceiptPrinter printer, string? args)
     {
         var widthMode = _n & 0b01110000; // bits 6,5,4
@@ -56,5 +62,13 @@ public class SelectCharacterSizeCommand : BaseCommand
         };
         
         printer.SelectCharacterSize(charWidth, charHeight);
+    }
+
+    public override void Execute(ReceiptPrinter printer, byte[]? args)
+    {
+        if (args != null && args.Length > 0)
+            _n = args[0];
+
+        Execute(printer, (string?)null);
     }
 }

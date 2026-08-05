@@ -44,6 +44,27 @@ public class SelectCutModeAndCutCommand : BaseCommand
         return false;
     }
 
+    public override bool InterpretNextByte(byte b)
+    {
+        if (_idx == 0)
+        {
+            _idx++;
+            _m = b;
+            _n = 0;
+
+            // If "m" is greater than 49, it means cut function is B, C, or D with a second arg
+            return (_m > 49);
+        }
+       
+        if (_idx == 1)
+        {
+            _idx++;
+            _n = b;
+        }
+        
+        return false;
+    }
+
     public override void Execute(ReceiptPrinter printer, string? args)
     {
         var function = CutFunction.Cut;

@@ -41,6 +41,24 @@ public class PaperAutoCut : BaseCommand
         return false;
     }
 
+    public override bool InterpretNextByte(byte b)
+    {
+        if (_idx == 0)
+        {
+            _idx++;
+            _n = b;
+            _m = 0;
+            if (_n == 0x60) return true;
+        }
+        else if (_idx == 1)
+        {
+            _idx++;
+            _m = b;
+        }
+        
+        return false;
+    }
+
     public override void Execute(ReceiptPrinter printer, string? args)
     {
         // Nothing to do

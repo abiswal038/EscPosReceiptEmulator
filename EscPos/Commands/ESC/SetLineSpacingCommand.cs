@@ -24,8 +24,22 @@ public class SetLineSpacingCommand : BaseCommand
         return false;
     }
 
+    public override bool InterpretNextByte(byte b)
+    {
+        _n = b;
+        return false;
+    }
+
     public override void Execute(ReceiptPrinter printer, string? args)
     {
         printer.SetLineSpacing(_n);
+    }
+
+    public override void Execute(ReceiptPrinter printer, byte[]? args)
+    {
+        if (args != null && args.Length > 0)
+            _n = args[0];
+
+        Execute(printer, (string?)null);
     }
 }

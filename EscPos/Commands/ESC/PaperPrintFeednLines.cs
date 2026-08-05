@@ -28,6 +28,13 @@ public class PaperPrintFeednLines : BaseCommand
 		return false;
 	}
 
+	public override bool InterpretNextByte(byte b)
+	{
+		_n = b;
+		if (_n > 200) _n = 200;
+		return false;
+	}
+
 	public override void Execute(ReceiptPrinter printer, string? args)
 	{
 		if (printer.CurrentReceipt.GetSkipLineFeed())
@@ -41,5 +48,13 @@ public class PaperPrintFeednLines : BaseCommand
 			printer.LineFeed();
 			_n--;
 		}
+	}
+
+	public override void Execute(ReceiptPrinter printer, byte[]? args)
+	{
+		if (args != null && args.Length > 0)
+			_n = args[0];
+
+		Execute(printer, (string?)null);
 	}
 }

@@ -27,6 +27,12 @@ public class PaperPrintFeed : BaseCommand
 		return false;
 	}
 
+	public override bool InterpretNextByte(byte b)
+	{
+		_n = b;
+		return false;
+	}
+
 	public override void Execute(ReceiptPrinter printer, string? args)
 	{
 		if (printer.CurrentReceipt.GetSkipLineFeed())
@@ -37,5 +43,13 @@ public class PaperPrintFeed : BaseCommand
 
 		if (_n > 0) printer.CurrentReceipt.FeedDotLines(_n);
 		_n = 0;
+	}
+
+	public override void Execute(ReceiptPrinter printer, byte[]? args)
+	{
+		if (args != null && args.Length > 0)
+			_n = args[0];
+
+		Execute(printer, (string?)null);
 	}
 }

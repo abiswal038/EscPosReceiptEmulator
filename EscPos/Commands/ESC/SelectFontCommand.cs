@@ -25,6 +25,12 @@ public class SelectFontCommand : BaseCommand
         return false;
     }
 
+    public override bool InterpretNextByte(byte b)
+    {
+        _n = b;
+        return false;
+    }
+
     public override void Execute(ReceiptPrinter printer, string? args)
     {
         switch (_n)
@@ -51,5 +57,13 @@ public class SelectFontCommand : BaseCommand
                 printer.SelectFont(PrinterFont.SpecialFontB);
                 break;
         }
+    }
+
+    public override void Execute(ReceiptPrinter printer, byte[]? args)
+    {
+        if (args != null && args.Length > 0)
+            _n = args[0];
+
+        Execute(printer, (string?)null);
     }
 }
