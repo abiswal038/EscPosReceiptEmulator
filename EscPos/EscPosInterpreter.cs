@@ -347,6 +347,48 @@ public class EscPosInterpreter
                         _activeCommand.Execute(_printer, (byte[]?)null);
                         _activeCommand = null;
                     }
+
+                    continue;
+                }
+
+                var hasPotentialMatch = false;
+                foreach (var prefix in _commandRegistry.Keys)
+                {
+                    if (prefix.StartsWith(commandText, StringComparison.Ordinal))
+                    {
+                        hasPotentialMatch = true;
+                        break;
+                    }
+                }
+
+                if (!hasPotentialMatch)
+                {
+                    var byteText = new StringBuilder();
+                    for (var j = 0; j < commandText.Length; j++)
+                    {
+                        if (j > 0) byteText.Append(", ");
+                        byteText.AppendFormat("0x{0:X2}", (byte)commandText[j]);
+                    }
+
+                    Logger.Info($"Ignoring unsupported command prefix [{byteText}]");
+                    _interpretingCommandPrefix = false;
+                    _commandBuffer.Clear();
+
+                    if (current == ESCb || current == FSb || current == GSb)
+                    {
+                        _interpretingCommandPrefix = true;
+                        _commandBuffer.Append((char)current);
+                    }
+
+                    continue;
+                }
+
+                if (commandText.Length > _maxCommandPrefixLength)
+                {
+                    string byteText;
+                    if (i > 0) byteText = string.Format("0x{0:X2} 0x{1:X2}", data[i - 1], data[i]);
+                    else byteText = string.Format("0x{0:X2}", data[i]);
+                    throw new InvalidOperationException($"Invalid or unsupported command [{i}] encountered: [{byteText}]");
                 }
 
                 continue;
