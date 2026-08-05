@@ -1,4 +1,5 @@
-﻿using ReceiptPrinterEmulator.Emulator;
+﻿using System.Text;
+using ReceiptPrinterEmulator.Emulator;
 
 namespace ReceiptPrinterEmulator.EscPos;
 
@@ -31,4 +32,30 @@ public abstract class BaseCommand
     /// </summary>
     /// <param name="args">The combined args (everything past the command prefix seen by InterpretNextChar)</param>
     public abstract void Execute(ReceiptPrinter printer, string? args);
+
+    // --- New byte-based API (default implementations route to the existing char/string API)
+
+    /// <summary>
+    /// Interpret the next raw byte for commands when processing binary input.
+    /// Default implementation routes to InterpretNextChar for backward compatibility.
+    /// </summary>
+    /// <param name="b">The byte to interpret</param>
+    /// <returns>TRUE to continue interpreting args, FALSE to finish</returns>
+    public virtual bool InterpretNextByte(byte b) => InterpretNextChar((char)b);
+
+    /// <summary>
+    /// Execute the command with raw bytes as arguments. Default implementation decodes bytes as Latin1
+    /// and calls the string-based Execute for backward compatibility.
+    /// </summary>
+    public virtual void Execute(ReceiptPrinter printer, byte[]? args)
+    {
+        if (args == null)
+        {
+            Execute(printer, (string?)null);
+            return;
+        }
+
+        var s = Encoding.Latin1.GetString(args);
+        Execute(printer, s);
+    }
 }
