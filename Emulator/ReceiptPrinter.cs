@@ -60,6 +60,28 @@ public class ReceiptPrinter
         OnActivityEvent?.Invoke(this, EventArgs.Empty);
     }
 
+    // New byte-based overload for raw network input
+    public void FeedEscPos(byte[] data)
+    {
+        try
+        {
+            if (data.Length > 10000)
+                File.WriteAllBytes("last_ticket.bin", data);
+            File.WriteAllBytes("last_escpos_receive.bin", data);
+
+            var head = BitConverter.ToString(data, 0, Math.Min(16, data.Length));
+            Logger.Info($"Received (bytes): {head} (len={data.Length})");
+
+            _escPosInterpreter.Interpret(data.AsSpan());
+        }
+        catch (Exception ex)
+        {
+            Logger.Exception(ex, "ESC/POS Interpreter Error");
+        }
+
+        OnActivityEvent?.Invoke(this, EventArgs.Empty);
+    }
+
     #endregion
 
     #region Receipt meta
@@ -219,9 +241,9 @@ public class ReceiptPrinter
 
     public void PrintTab()
     {
-    		string tabs = "";
-    		
-    		for (var i = 0; i < _tabSpacing; i++) tabs += " ";
+        		string tabs = "";
+        		
+        		for (var i = 0; i < _tabSpacing; i++) tabs += " ";
         PrintText(tabs);
     }
 
