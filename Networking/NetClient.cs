@@ -68,5 +68,5 @@ public class NetClient
     }
 
     private static void HandleIncomingData(ReadOnlySpan<byte> data) =>
-        App.Printer?.FeedEscPos(Encoding.Latin1.GetString(data));
+        App.Printer?.FeedEscPos(data.ToArray());
 }
