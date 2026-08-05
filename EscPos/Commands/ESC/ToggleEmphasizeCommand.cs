@@ -11,7 +11,7 @@ public class ToggleEmphasizeCommand : BaseCommand
     public override string Prefix => EscPosInterpreter.ESC + "E";
     public override bool HasArgs => true;
     
-    private int _n;
+    private byte _n;
 
     public override void Reset()
     {
@@ -20,15 +20,33 @@ public class ToggleEmphasizeCommand : BaseCommand
     
     public override bool InterpretNextChar(char c)
     {
-        _n = c;
+        _n = (byte)c;
         return false;
+    }
+
+    // New byte-based interpreter
+    public override bool InterpretNextByte(byte b)
+    {
+        _n = b;
+        return false; // single-arg command
     }
 
     public override void Execute(ReceiptPrinter printer, string? args)
     {
-        if (_n is 0)
+        byte n = _n;
+        if (!string.IsNullOrEmpty(args)) n = (byte)args[0];
+
+        if (n == 0)
             printer.SelectEmphasizeMode(false);
-        else if (_n is 1)
+        else if (n == 1)
             printer.SelectEmphasizeMode(true);
+    }
+
+    public override void Execute(ReceiptPrinter printer, byte[]? args)
+    {
+        byte n = _n;
+        if (args != null && args.Length > 0) n = args[0];
+
+        printer.SelectEmphasizeMode(n != 0);
     }
 }

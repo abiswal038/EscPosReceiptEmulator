@@ -263,6 +263,146 @@ public class EscPosInterpreter
         }
     }
 
+    // New byte-oriented interpreter for raw input
+    public void Interpret(ReadOnlySpan<byte> data)
+    {
+        var argBuffer = new List<byte>();
+
+        for (var i = 0; i < data.Length; i++)
+        {
+            var current = data[i];
+
+            #region Command modes
+
+            if (_interpretingCommandArgs)
+            {
+                // Reading command args: keep reading until the command is done interpreting
+                argBuffer.Add(current);
+
+                var shouldContinue = _activeCommand!.InterpretNextByte(current);
+
+                if (!shouldContinue)
+                {
+                    var finalArgs = argBuffer.ToArray();
+                    int len = finalArgs.Length;
+                    string byteText = "";
+
+                    if (len > 8) len = 8;
+                    for (var j = 0; j < len; j++)
+                    {
+                        byteText += string.Format("0x{0:X2}", (int)finalArgs[j]);
+                        if (j != len - 1) byteText += ", ";
+                    }
+                    if (len < finalArgs.Length) byteText += " ...";
+
+                    Logger.Info($"Execute [{_activeCommand.GetType().Name}] with args [{byteText}]");
+
+                    _activeCommand.Execute(_printer, finalArgs);
+                    _activeCommand = null;
+
+                    _interpretingCommandPrefix = false;
+                    _interpretingCommandArgs = false;
+                    argBuffer.Clear();
+                }
+
+                continue;
+            }
+
+            if (_interpretingCommandPrefix)
+            {
+                _commandBuffer.Append((char)current);
+
+                var commandText = _commandBuffer.ToString();
+
+                if (commandText.Length > _maxCommandPrefixLength)
+                {
+                    string byteText;
+                    if (i > 0) byteText = string.Format("0x{0:X2} 0x{1:X2}", data[i - 1], data[i]);
+                    else byteText = string.Format("0x{0:X2}", data[i]);
+                    throw new InvalidOperationException($"Invalid or unsupported command [{i}] encountered: [{byteText}]");
+                }
+
+                if (_commandRegistry.ContainsKey(commandText))
+                {
+                    _activeCommand = _commandRegistry[commandText];
+                    _activeCommand.Reset();
+
+                    _commandBuffer.Clear();
+
+                    if (_activeCommand.HasArgs)
+                    {
+                        _interpretingCommandPrefix = false;
+                        _interpretingCommandArgs = true;
+                        argBuffer.Clear();
+                    }
+                    else
+                    {
+                        _interpretingCommandPrefix = false;
+                        _interpretingCommandArgs = false;
+
+                        Logger.Info($"Execute [{_activeCommand.GetType().Name}]");
+
+                        _activeCommand.Execute(_printer, (byte[]?)null);
+                        _activeCommand = null;
+                    }
+                }
+
+                continue;
+            }
+
+            #endregion
+
+            #region Normal mode (byte-based)
+
+            if (current == HTb)
+            {
+                _printer.PrintTab();
+                continue;
+            }
+
+            if (current == LFb || current == CRb)
+            {
+                _printer.PrintAndLineFeed(FinalizePrintBuffer());
+                continue;
+            }
+
+            if (current == FFb)
+            {
+                continue;
+            }
+
+            if (current == DLEb)
+            {
+                throw new NotImplementedException("Not supported: DLE / real time commands");
+            }
+
+            if (current == CANb)
+            {
+                throw new NotImplementedException("Not supported: page mode");
+            }
+
+            if (current == ESCb || current == FSb || current == GSb)
+            {
+                _printer.PrintText(FinalizePrintBuffer());
+                _interpretingCommandPrefix = true;
+
+                _commandBuffer.Clear();
+                _commandBuffer.Append((char)current);
+                continue;
+            }
+
+            if (current == NULb)
+            {
+                continue;
+            }
+
+            // printable byte -> append as Latin1 char to print buffer
+            _printBuffer.Append((char)current);
+
+            #endregion
+        }
+    }
+
     public static readonly char NUL = Convert.ToChar(0);
     public static readonly char HT = Convert.ToChar(9);
     public static readonly char LF = Convert.ToChar(10);  // 0x0A
@@ -273,4 +413,16 @@ public class EscPosInterpreter
     public static readonly char ESC = Convert.ToChar(27); // 0x1B
     public static readonly char FS = Convert.ToChar(28);  // 0x1C
     public static readonly char GS = Convert.ToChar(29);  // 0x1D
+
+    // byte equivalents for binary interpretation
+    public static readonly byte NULb = 0;
+    public static readonly byte HTb = 9;
+    public static readonly byte LFb = 10;
+    public static readonly byte FFb = 12;
+    public static readonly byte CRb = 13;
+    public static readonly byte DLEb = 16;
+    public static readonly byte CANb = 24;
+    public static readonly byte ESCb = 27;
+    public static readonly byte FSb = 28;
+    public static readonly byte GSb = 29;
 }
